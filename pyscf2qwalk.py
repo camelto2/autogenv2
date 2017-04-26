@@ -397,7 +397,7 @@ def find_atom_types(mol):
 
   return list(set(atom_types))
 
-def print_jastrow(mol,basename='qw'):
+def print_jastrow(mol,outf):
   
   basis_cutoff = find_basis_cutoff(mol)
   atom_types = find_atom_types(mol)
@@ -460,8 +460,7 @@ def print_jastrow(mol,basename='qw'):
       "  }",
       "}"
   ]
-  with open(basename+".jast2",'w') as outf:
-    outf.write("\n".join(outlines))
+  outf.write("\n".join(outlines))
   return None
 
 
@@ -474,13 +473,14 @@ def print_qwalk_mol(mol, mf, method='scf', tol=0.01, basename='qw'):
       'orbs':[basename+".orb"],
       'basis':[basename+".basis"],
       'slater':[basename+".slater"],
-      'system':[basename+".sys"]
+      'system':[basename+".sys"],
+      'jastrows':[basename+".jast2"]
     }
 
   print_orb(mol,mf,open(files['orbs'][0],'w'))
   print_basis(mol,open(files['basis'][0],'w'))
   print_sys(mol,open(files['system'][0],'w'))
-  print_jastrow(mol,basename)
+  print_jastrow(mol,open(files['jastrows'][0],'w'))
   if method == 'scf':
     print_slater(mol,mf,files['orbs'][0],files['basis'][0],open(files['slater'][0],'w'))
   elif method == 'mcscf':
@@ -498,11 +498,12 @@ def print_qwalk_pbc(cell,mf,method,tol,basename):
       'basis':[basename+".basis"],
       'slater':[],
       'system':[],
+      'jastrows':[basename+".jast2"],
       'kpoints':[]
     }
 
   print_basis(cell,open(files['basis'][0],'w'))
-  print_jastrow(cell,basename)
+  print_jastrow(cell,open(files['jastrows'][0],'w'))
   
   nk=mf.kpts.shape[0]
   kpoints=cell.get_scaled_kpts(mf.kpts)
