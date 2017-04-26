@@ -69,7 +69,8 @@ class Recipe:
     return {'id':self.jobid}
     
 
-########################################################## class LocalCrystalDFT(Recipe): """ An example of a Recipe that perfoms a crystal DFT calculation """
+########################################################## 
+class LocalCrystalDFT(Recipe): """ An example of a Recipe that perfoms a crystal DFT calculation """
   
   def __init__(self,jobid,struct,crystal_opts,structtype='cif'):
     # May have it automatically detect file type? Probably wouldn't be too hard.
