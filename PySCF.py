@@ -107,7 +107,6 @@ class PySCFWriter:
         "from pyscf.scf import ROHF, UHF",
         "from pyscf.dft.rks import RKS",
         "from pyscf.dft.uks import UKS",
-        "from pyscf2qwalk import print_qwalk",
         "mol=gto.Mole(verbose=4)",
         "mol.build(atom='''"+self.xyz+"''',",
         "basis='%s',"%self.basis,
@@ -136,13 +135,7 @@ class PySCFWriter:
                    self.cas['method'], self.cas['ncas'], self.cas['nelec'][0], 
                    self.cas['nelec'][1], self.cas['ncore']), 
                    "mc.direct_scf_tol=%f"%self.direct_scf_tol,
-
-                   "mc.kernel()",
-
-                   "print_qwalk(mol, mc, method= 'mcscf', tol = %g , basename = '%s')"%(
-                    self.cas['tol'], self.basename)]
-    else:
-      outlines +=[ "print_qwalk(mol,m)"]
+                   "mc.kernel()"]
     f.write('\n'.join(outlines))
 
     self.completed=True

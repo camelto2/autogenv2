@@ -101,6 +101,8 @@ class CrystalManager:
 #######################################################################
 
 class QWalkfromCrystalManager:
+  # I think we can have a common class for crystal and pyscf conversion. The
+  # Crystal converter objects are a little outdated.
   """Set up a QWalk job from Crystal. 
   In this we will Convert from a CRYAPI_OUT-ed properties run. 
   """
@@ -192,6 +194,7 @@ class PySCFManager:
     self.driverfn='pyscf_driver.py'
     self.infiles=[]
     self.outfiles=[]
+    self.chkfiles=[]
   #------------------------------------------------
     
   def is_consistent(self,other):
@@ -232,3 +235,29 @@ class PySCFManager:
     else:
       return 'not_finished'
     
+#######################################################################
+
+class QWalkfromPySCFManager:
+  """Set up a QWalk job from PySCF. """
+  #------------------------------------------------
+  def __init__(self,convert_runner):
+    self.runner=convert_runner
+    
+  def is_consistent(self,other):
+    return self.runner.is_consistent(other.runner)
+  
+  #------------------------------------------------
+  def nextstep(self):
+    if not self.runner.completed:
+      self.files=self.runner.run()
+  #------------------------------------------------
+
+  def write_summary(self):
+    print("K-points",len(self.files['kpoints']))
+
+  #----------------------------------------
+  def status(self):
+    if self.runner.completed:
+      return 'ok'
+    else:
+      return 'not_finished'

@@ -69,9 +69,7 @@ class Recipe:
     return {'id':self.jobid}
     
 
-##########################################################
-class LocalCrystalDFT(Recipe):
-  """ An example of a Recipe that perfoms a crystal DFT calculation """
+########################################################## class LocalCrystalDFT(Recipe): """ An example of a Recipe that perfoms a crystal DFT calculation """
   
   def __init__(self,jobid,struct,crystal_opts,structtype='cif'):
     # May have it automatically detect file type? Probably wouldn't be too hard.
@@ -293,12 +291,14 @@ class LocalCrystalQWalk(Recipe):
 #######################################################
 from PySCF import PySCFWriter,PySCFPBCWriter,PySCFReader
 from PySCFRunner import PySCFRunnerPBS
+from PySCF2QWalk import PySCF2QWalk
 
 class PySCFQWalk(Recipe):
   """ Use PySCF to generate a QWalk run. """
   
   def __init__(self,jobid,
                pyscf_opts={},
+               converter_opts={},
                variance_opts={},
                energy_opts={},
                dmc_opts={},
@@ -338,6 +338,7 @@ class PySCFQWalk(Recipe):
                                        PySCFReader()
                                       )]
     self.managers+=[
+      mgmt.QWalkfromPySCFManager(PySCF2QWalk(converter_opts)),
       mgmt.QWalkRunManager(
                            VarianceWriter(variance_opts),
                            qwalkrunners['variance'],
@@ -362,23 +363,31 @@ class PySCFQWalk(Recipe):
   #-----------------------------
   def nextstep(self):
     pyscf=0 #crystal index
-    var=1 #variance index
-    en=2 #energy index
-    dmc=3 
-    post=4 
+    convert=1 # converter index.
+    var=2 #variance index
+    en=3 #energy index
+    dmc=4 
+    post=5 
 
     # PySCF.
     self.managers[pyscf].nextstep()
     if self.managers[pyscf].status()!='ok':
       return 
 
+    # Converter.
+    updates={'chkfile':self.managers[pyscf].chkfiles[0]}
+    self.managers[convert].runner.set_options(updates)
+    self.managers[convert].nextstep()
+    if self.managers[convert].status()!='ok':
+      return
+    
     # Variance minimization.
-    base='qw'
+    base=self.managers[convert].runner.basename
     files={}
-    files['sysfiles']=[base+'.sys']
-    files['slaterfiles']=[base+'.slater']
+    files['sysfiles']=self.managers[convert].runner.files['system']
+    files['slaterfiles']=self.managers[convert].runner.files['slater']
     files['basenames']=[base]
-    files['jastfiles']=[base+'.jast2']
+    files['jastfiles']=self.managers[convert].runner.files['jastrows']
     self.managers[var].writer.set_options(files)
     self.managers[var].nextstep()
     if self.managers[var].status()!='ok':
@@ -389,6 +398,9 @@ class PySCFQWalk(Recipe):
            'sysfiles':[],
            'wffiles':[] } 
     
+    # TODO it'd be nice if this code didn't depend on how exactly the variance
+    # and energy writer works. It can probably be done by accessing data
+    # available in the managers.
     files['basenames'].append(base)
     files['wffiles'].append(base+".energy.wfin")
     files['sysfiles'].append(base+".sys")
@@ -438,10 +450,11 @@ class PySCFQWalk(Recipe):
   #-----------------------------
   def generate_report(self):
     pyscf=0 #pyscf index
-    var=1 #variance index
-    en=2 #energy index
-    dmc=3 
-    post=4
+    convert=1
+    var=2 #variance index
+    en=3 #energy index
+    dmc=4 
+    post=5
     ret={'id':self.jobid}
     
     # Collect from PySCF.

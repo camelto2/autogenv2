@@ -16,7 +16,7 @@ def find_label(sph_label):
 
 #----------------------------------------------
 def print_orb(mol,m,f,k=0):
-  coeff=m.mo_coeff
+  coeff=m['mo_coeff']
   print_orb_coeff(mol,coeff,f,k)
     
 def print_orb_coeff(mol,coeff,f,k=0):
@@ -245,16 +245,16 @@ def print_sys(mol, f,kpoint=[0.,0.,0.]):
 ###########################################################
 
 def print_slater(mol, mf, orbfile, basisfile, f,k=0):
-  occ=mf.mo_occ 
-  corb = mf.mo_coeff.flatten()[0]
+  occ=mf['mo_occ'] 
+  corb = mf['mo_coeff'].flatten()[0]
   
   if isinstance(mol,pbc.gto.Cell):
     if len(occ.shape)==3:
-      occ=mf.mo_occ[:,k,:]
-      corb=mf.mo_coeff[0,k,0,0]
+      occ=mf['mo_occ'][:,k,:]
+      corb=mf['mo_coeff'][0,k,0,0]
     else:
-      occ=mf.mo_occ[k,:]
-      corb=mf.mo_coeff[k,0,0]
+      occ=mf['mo_occ'][k,:]
+      corb=mf['mo_coeff'][k,0,0]
       
   s=len(occ.shape) 
   tag='RHF'
@@ -505,8 +505,8 @@ def print_qwalk_pbc(cell,mf,method,tol,basename):
   print_basis(cell,open(files['basis'][0],'w'))
   print_jastrow(cell,open(files['jastrows'][0],'w'))
   
-  nk=mf.kpts.shape[0]
-  kpoints=cell.get_scaled_kpts(mf.kpts)
+  nk=mf['kpts'].shape[0]
+  kpoints=cell.get_scaled_kpts(mf['kpts'])
   for i in range(nk):
     bask=basename+"_%i"%i
     files['orbs'].append(bask+".orb")
@@ -533,3 +533,17 @@ def print_qwalk(mol,mf,method='scf',tol=0.01,basename='qw'):
   return files
   
        
+if __name__=='__main__':
+  import sys
+  from pyscf import lib
+  assert len(sys.argv)==2,"""
+  Usage: python pyscf2qwalk.py chkfile."""
+
+  # This is assuming a molecule and single-configuration, but other options are
+  # possible (see definitions of functions).
+  chkfile=sys.argv[1]
+  mol=lib.load_mol(chkfile)
+  mf=lib.load_mol(chkfile,'scf')
+  files=print_qwalk(mf,mol)
+  print("New files generated:")
+  print(files)
