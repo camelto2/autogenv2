@@ -250,6 +250,7 @@ class QWalkfromPySCFManager:
   def nextstep(self):
     if not self.runner.completed:
       self.files=self.runner.run()
+      print("PySCF2QWalk status",self.status())
   #------------------------------------------------
 
   def write_summary(self):
